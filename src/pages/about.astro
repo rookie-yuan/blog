@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../site.config';
+---
+
+<BaseLayout title="关于" description={`关于 ${siteConfig.author} 与这个博客`}>
+  <article class="prose prose-zinc dark:prose-invert max-w-[720px]">
+    <p class="font-mono text-xs text-sky-600 dark:text-sky-400 not-prose">// about</p>
+    <h1>关于我与这个博客</h1>
+    <p>
+      你好，我是 <strong>{siteConfig.author}</strong>。这里是我用来记录<strong>技术分析</strong>、<strong>个人感悟</strong>与<strong>日常思考</strong>的自留地。
+    </p>
+    <h2>为什么建这个站</h2>
+    <p>
+      零碎的想法发在社交平台很快会被时间流淹没，长篇的技术拆解又需要稳定、干净的排版、代码高亮、公式与图表支持。因此我用纯静态架构搭了这个小站，把所有内容以 Markdown 纯文本的形式留存在自己的仓库里。
+    </p>
+    <h2>技术栈</h2>
+    <ul>
+      <li>框架：Astro 7 + Tailwind CSS v4</li>
+      <li>写作扩展：Shiki 双主题代码高亮、KaTeX 数学公式、Mermaid 流程图、Pagefind 全文搜索</li>
+      <li>部署：GitHub Actions 自动构建 + Docker Caddy 静态容器</li>
+    </ul>
+    <h2>联系与订阅</h2>
+    <ul>
+      <li>
+        GitHub：<a href={siteConfig.social.github} target="_blank" rel="noopener noreferrer">{siteConfig.social.github}</a>
+      </li>
+      <li>
+        RSS 订阅：<a href={siteConfig.social.rss}>{siteConfig.siteUrl}{siteConfig.social.rss}</a>
+      </li>
+    </ul>
+  </article>
+</BaseLayout>

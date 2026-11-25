@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { siteConfig } from '../../site.config';
+import { filterPublishedPosts, sortPosts } from '../../utils/posts';
+
+const allPosts = await getCollection('blog');
+const posts = sortPosts(filterPublishedPosts(allPosts, import.meta.env.DEV));
+---
+
+<BaseLayout title="文章" description="全部技术分析、个人感悟与日常文章列表">
+  <header class="border-b border-zinc-200 pb-6 dark:border-zinc-800">
+    <p class="font-mono text-xs text-sky-600 dark:text-sky-400">// posts</p>
+    <h1 class="mt-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+      全部文章 ({posts.length})
+    </h1>
+    <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      包含 {siteConfig.categories.join('、')} 等分类的全部内容。
+    </p>
+  </header>
+
+  <div class="mt-8 grid gap-4 md:grid-cols-2">
+    {posts.map((post) => <PostCard post={post} />)}
+  </div>
+</BaseLayout>

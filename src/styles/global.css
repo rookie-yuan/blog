@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-page: #fafafa;
+    --bg-surface: #ffffff;
+    --bg-muted: #f4f4f5;
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --text-muted: #71717a;
+    --border-hairline: #e4e4e7;
+    --accent: #0284c7;
+    --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  html.dark {
+    --bg-page: #0a0a0a;
+    --bg-surface: #111111;
+    --bg-muted: #18181b;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --border-hairline: #27272a;
+    --accent: #38bdf8;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
+  code, pre, kbd, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Shiki dual-theme support */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg) !important;
+}
+
+html.dark .astro-code,
+html.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Code block wrapper with language bar & copy button */
+.code-block-shell {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-hairline);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background-color: var(--bg-muted);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.code-copy-btn {
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.code-copy-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.code-block-shell pre.astro-code {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 1rem !important;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+/* KaTeX overflow safety on small screens */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+/* Mermaid diagram container */
+.mermaid-block {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border-hairline);
+  border-radius: 0.5rem;
+  background-color: var(--bg-surface);
+  overflow-x: auto;
+}
+
+.mermaid-render {
+  display: flex;
+  justify-content: center;
+}
+
+.mermaid-render svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prose refinement */
+.prose {
+  --tw-prose-body: var(--text-primary);
+  --tw-prose-headings: var(--text-primary);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--text-primary);
+  --tw-prose-counters: var(--text-muted);
+  --tw-prose-bullets: var(--text-muted);
+  --tw-prose-hr: var(--border-hairline);
+  --tw-prose-quotes: var(--text-secondary);
+  --tw-prose-quote-borders: var(--accent);
+  --tw-prose-code: var(--text-primary);
+  --tw-prose-th-borders: var(--border-hairline);
+  --tw-prose-td-borders: var(--border-hairline);
+}
+
+.prose :not(pre) > code {
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-muted);
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}

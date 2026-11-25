@@ -1,0 +1,169 @@
+---
+---
+
+<div
+  id="search-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="站内搜索"
+  class="fixed inset-0 z-50 hidden items-start justify-center bg-black/50 px-4 pt-20 backdrop-blur-xs"
+>
+  <div
+    data-search-panel
+    class="w-full max-w-xl overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+  >
+    <div class="flex items-center gap-2 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+      <svg
+        class="h-4 w-4 shrink-0 text-zinc-400"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.3-4.3"></path>
+      </svg>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="搜索文章标题、正文或标签..."
+        autocomplete="off"
+        class="w-full bg-transparent text-sm text-zinc-900 placeholder-zinc-400 outline-none dark:text-zinc-100"
+      />
+      <kbd class="rounded border border-zinc-200 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        ESC
+      </kbd>
+    </div>
+    <div id="search-results" class="max-h-96 overflow-y-auto p-2 text-sm">
+      <p class="px-3 py-6 text-center font-mono text-xs text-zinc-500">
+        输入关键词开始搜索
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('search-modal');
+  const panel = document.querySelector('[data-search-panel]');
+  const input = document.getElementById('search-input') as HTMLInputElement | null;
+  const resultsEl = document.getElementById('search-results');
+
+  interface PagefindResultData {
+    url: string;
+    meta?: { title?: string };
+    excerpt?: string;
+  }
+
+  interface PagefindInstance {
+    init?: () => Promise<void>;
+    search: (query: string) => Promise<{
+      results: Array<{ data: () => Promise<PagefindResultData> }>;
+    }>;
+  }
+
+  let pagefind: PagefindInstance | null = null;
+  let loadFailed = false;
+
+  async function ensurePagefind(): Promise<PagefindInstance | null> {
+    if (pagefind) return pagefind;
+    if (loadFailed) return null;
+    try {
+      const pagefindUrl = '/pagefind/pagefind.js';
+      const mod = (await import(/* @vite-ignore */ pagefindUrl)) as PagefindInstance;
+      if (mod.init) {
+        await mod.init();
+      }
+      pagefind = mod;
+      return pagefind;
+    } catch {
+      loadFailed = true;
+      return null;
+    }
+  }
+
+  function openModal() {
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    input?.focus();
+    void ensurePagefind();
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  document.querySelectorAll('[data-open-search]').forEach((btn) => {
+    btn.addEventListener('click', openModal);
+  });
+
+  modal?.addEventListener('click', (event) => {
+    if (panel && !panel.contains(event.target as Node)) {
+      closeModal();
+    }
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      if (modal?.classList.contains('hidden')) {
+        openModal();
+      } else {
+        closeModal();
+      }
+    } else if (event.key === 'Escape' && !modal?.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+
+  let timer: number | undefined;
+  input?.addEventListener('input', () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(async () => {
+      if (!resultsEl) return;
+      const query = input.value.trim();
+      if (!query) {
+        resultsEl.innerHTML =
+          '<p class="px-3 py-6 text-center font-mono text-xs text-zinc-500">输入关键词开始搜索</p>';
+        return;
+      }
+
+      const pf = await ensurePagefind();
+      if (!pf) {
+        resultsEl.innerHTML =
+          '<p class="px-3 py-6 text-center text-xs text-zinc-500">开发模式下需先运行 <code class="font-mono">npm run build</code> 生成搜索索引，构建预览或线上环境可直接使用全文搜索。</p>';
+        return;
+      }
+
+      const search = await pf.search(query);
+      if (!search.results.length) {
+        resultsEl.innerHTML =
+          '<p class="px-3 py-6 text-center font-mono text-xs text-zinc-500">未找到匹配的文章</p>';
+        return;
+      }
+
+      const items = await Promise.all(
+        search.results.slice(0, 8).map((r) => r.data())
+      );
+
+      resultsEl.replaceChildren();
+      items.forEach((item) => {
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.className =
+          'block rounded-md px-3 py-2.5 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900';
+        const title = document.createElement('div');
+        title.className = 'font-medium text-zinc-900 dark:text-zinc-100';
+        title.textContent = item.meta?.title || item.url;
+        const excerpt = document.createElement('div');
+        excerpt.className = 'mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400';
+        excerpt.innerHTML = item.excerpt || '';
+        link.append(title, excerpt);
+        resultsEl.append(link);
+      });
+    }, 150);
+  });
+</script>

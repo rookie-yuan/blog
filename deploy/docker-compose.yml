@@ -1,0 +1,15 @@
+services:
+  blog-web:
+    image: caddy:2-alpine
+    container_name: blog-web
+    restart: unless-stopped
+    mem_limit: 96m
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./dist:/srv/blog:ro
+    networks:
+      - edge-gateway
+
+networks:
+  edge-gateway:
+    external: true

@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  filterPublishedPosts,
+  formatDate,
+  getPostSlug,
+  groupPostsByYear,
+} from '../utils/posts';
+
+const allPosts = await getCollection('blog');
+const published = filterPublishedPosts(allPosts, import.meta.env.DEV);
+const groups = groupPostsByYear(published);
+---
+
+<BaseLayout title="归档" description="按年份整理的文章时间线归档">
+  <header class="border-b border-zinc-200 pb-6 dark:border-zinc-800">
+    <p class="font-mono text-xs text-sky-600 dark:text-sky-400">// archive</p>
+    <h1 class="mt-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+      文章归档
+    </h1>
+    <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      共 {published.length} 篇文章，按时间倒序排列。
+    </p>
+  </header>
+
+  <div class="mt-8 space-y-10">
+    {
+      groups.map((group) => (
+        <section>
+          <h2 class="font-mono text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            {group.year}
+            <span class="ml-2 text-xs font-normal text-zinc-500">
+              ({group.posts.length})
+            </span>
+          </h2>
+          <ul class="mt-4 divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50">
+            {group.posts.map((post) => (
+              <li>
+                <a
+                  href={`/posts/${getPostSlug(post.id)}/`}
+                  class="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-zinc-900"
+                >
+                  <div class="flex items-center gap-3 min-w-0">
+                    <time
+                      datetime={formatDate(post.data.pubDate)}
+                      class="shrink-0 font-mono text-xs text-zinc-500"
+                    >
+                      {formatDate(post.data.pubDate).slice(5)}
+                    </time>
+                    <span class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {post.data.title}
+                    </span>
+                  </div>
+                  <span class="shrink-0 font-mono text-xs text-sky-600 dark:text-sky-400">
+                    {post.data.category}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>

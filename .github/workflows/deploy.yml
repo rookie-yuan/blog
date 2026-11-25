@@ -1,0 +1,64 @@
+name: Deploy Blog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests and build
+        run: |
+          npm test
+          npm run build
+
+      - name: Deploy static site to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR || '~/blog' }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          tar -czf site.tar.gz -C dist .
+          tar -czf deploy_cfg.tar.gz -C deploy Caddyfile docker-compose.yml
+
+          cat site.tar.gz | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" "
+            set -e
+            TARGET_DIR=\"$DEPLOY_DIR\"
+            eval TARGET_DIR=\"\$TARGET_DIR\"
+            mkdir -p \"\$TARGET_DIR/dist_new\" \"\$TARGET_DIR/dist\"
+            rm -rf \"\$TARGET_DIR/dist_new\"/*
+            tar -xzf - -C \"\$TARGET_DIR/dist_new\"
+            rm -rf \"\$TARGET_DIR/dist_old\"
+            mv \"\$TARGET_DIR/dist\" \"\$TARGET_DIR/dist_old\"
+            mv \"\$TARGET_DIR/dist_new\" \"\$TARGET_DIR/dist\"
+            rm -rf \"\$TARGET_DIR/dist_old\"
+          "
+
+          cat deploy_cfg.tar.gz | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" "
+            set -e
+            TARGET_DIR=\"$DEPLOY_DIR\"
+            eval TARGET_DIR=\"\$TARGET_DIR\"
+            tar -xzf - -C \"\$TARGET_DIR\"
+            cd \"\$TARGET_DIR\"
+            docker compose up -d
+          "

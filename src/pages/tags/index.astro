@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { collectTags, filterPublishedPosts } from '../../utils/posts';
+
+const allPosts = await getCollection('blog');
+const published = filterPublishedPosts(allPosts, import.meta.env.DEV);
+const tags = collectTags(published);
+---
+
+<BaseLayout title="标签" description="按标签浏览博客文章">
+  <header class="border-b border-zinc-200 pb-6 dark:border-zinc-800">
+    <p class="font-mono text-xs text-sky-600 dark:text-sky-400">// tags</p>
+    <h1 class="mt-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+      全部标签 ({tags.length})
+    </h1>
+  </header>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    {
+      tags.map((item) => (
+        <a
+          href={`/tags/${encodeURIComponent(item.slug)}/`}
+          class="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3.5 py-2 font-mono text-sm text-zinc-700 transition-colors hover:border-sky-600 hover:text-sky-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-sky-400 dark:hover:text-sky-400"
+        >
+          <span>#{item.tag}</span>
+          <span class="text-xs text-zinc-400">({item.count})</span>
+        </a>
+      ))
+    }
+  </div>
+</BaseLayout>

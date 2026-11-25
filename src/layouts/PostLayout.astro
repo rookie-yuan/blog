@@ -1,0 +1,230 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents, { type TocHeading } from '../components/TableOfContents.astro';
+import Giscus from '../components/Giscus.astro';
+import { siteConfig } from '../site.config';
+import { encodeTagSlug, formatDate } from '../utils/posts';
+
+interface NavPostLink {
+  slug: string;
+  title: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  category: string;
+  tags: string[];
+  readingTime: number;
+  headings: TocHeading[];
+  prevPost?: NavPostLink;
+  nextPost?: NavPostLink;
+}
+
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  category,
+  tags,
+  readingTime,
+  headings,
+  prevPost,
+  nextPost,
+} = Astro.props;
+
+const katexCssUrl = `https://cdn.jsdelivr.net/npm/katex@${siteConfig.katexVersion}/dist/katex.min.css`;
+---
+
+<BaseLayout title={title} description={description} ogType="article">
+  <link slot="head" rel="stylesheet" href={katexCssUrl} crossorigin="anonymous" />
+
+  <div class="lg:grid lg:grid-cols-[minmax(0,720px)_220px] lg:justify-between lg:gap-10">
+    <article
+      class="min-w-0 max-w-[720px]"
+      data-pagefind-body
+      data-mermaid-cdn={siteConfig.mermaidCdnUrl}
+    >
+      <header class="border-b border-zinc-200 pb-6 dark:border-zinc-800">
+        <div class="flex flex-wrap items-center gap-2 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+          <time datetime={formatDate(pubDate)}>{formatDate(pubDate)}</time>
+          {
+            updatedDate && (
+              <>
+                <span>·</span>
+                <span>更新于 {formatDate(updatedDate)}</span>
+              </>
+            )
+          }
+          <span>·</span>
+          <span>{readingTime} min read</span>
+          <span>·</span>
+          <span class="text-sky-600 dark:text-sky-400">{category}</span>
+        </div>
+
+        <h1 class="mt-3 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-zinc-50">
+          {title}
+        </h1>
+
+        <p class="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {description}
+        </p>
+
+        {
+          tags.length > 0 && (
+            <div class="mt-4 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <a
+                  href={`/tags/${encodeURIComponent(encodeTagSlug(tag))}/`}
+                  class="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 font-mono text-xs text-zinc-600 transition-colors hover:border-sky-600 hover:text-sky-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-sky-400 dark:hover:text-sky-400"
+                >
+                  #{tag}
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </header>
+
+      <div class="prose prose-zinc dark:prose-invert mt-8 max-w-none prose-headings:scroll-mt-20 prose-headings:font-semibold prose-a:no-underline hover:prose-a:underline">
+        <slot />
+      </div>
+
+      {
+        (prevPost || nextPost) && (
+          <nav
+            aria-label="上下篇导航"
+            class="mt-12 grid gap-3 border-t border-zinc-200 pt-6 sm:grid-cols-2 dark:border-zinc-800"
+          >
+            {prevPost ? (
+              <a
+                href={`/posts/${prevPost.slug}/`}
+                class="rounded-lg border border-zinc-200 p-4 transition-colors hover:border-sky-600 dark:border-zinc-800 dark:hover:border-sky-400"
+              >
+                <div class="font-mono text-xs text-zinc-500">← 上一篇</div>
+                <div class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  {prevPost.title}
+                </div>
+              </a>
+            ) : (
+              <div />
+            )}
+
+            {nextPost && (
+              <a
+                href={`/posts/${nextPost.slug}/`}
+                class="rounded-lg border border-zinc-200 p-4 text-right transition-colors hover:border-sky-600 dark:border-zinc-800 dark:hover:border-sky-400"
+              >
+                <div class="font-mono text-xs text-zinc-500">下一篇 →</div>
+                <div class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  {nextPost.title}
+                </div>
+              </a>
+            )}
+          </nav>
+        )
+      }
+
+      <Giscus />
+    </article>
+
+    <TableOfContents headings={headings} />
+  </div>
+</BaseLayout>
+
+<script>
+  // Enhance Shiki code blocks with language header and copy button
+  const codeBlocks = document.querySelectorAll<HTMLPreElement>('pre.astro-code');
+  codeBlocks.forEach((pre) => {
+    if (pre.parentElement?.classList.contains('code-block-shell')) return;
+    const lang = pre.getAttribute('data-language') || 'text';
+
+    const shell = document.createElement('div');
+    shell.className = 'code-block-shell';
+
+    const header = document.createElement('div');
+    header.className = 'code-block-header';
+
+    const label = document.createElement('span');
+    label.textContent = lang;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-copy-btn';
+    btn.textContent = '复制';
+    btn.addEventListener('click', async () => {
+      const codeText = pre.querySelector('code')?.innerText ?? pre.innerText;
+      try {
+        await navigator.clipboard.writeText(codeText);
+        btn.textContent = '已复制';
+        window.setTimeout(() => {
+          btn.textContent = '复制';
+        }, 1600);
+      } catch {
+        btn.textContent = '复制失败';
+      }
+    });
+
+    header.append(label, btn);
+    pre.parentNode?.insertBefore(shell, pre);
+    shell.append(header, pre);
+  });
+
+  // Lazy-load and render Mermaid diagrams only when present
+  const mermaidBlocks = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-mermaid-block]')
+  );
+  if (mermaidBlocks.length > 0) {
+    const articleEl = document.querySelector<HTMLElement>('[data-mermaid-cdn]');
+    const mermaidCdnUrl = articleEl?.dataset.mermaidCdn;
+
+    interface MermaidApi {
+      initialize: (config: Record<string, unknown>) => void;
+      render: (id: string, definition: string) => Promise<{ svg: string }>;
+    }
+
+    let mermaidApi: MermaidApi | null = null;
+    let renderSeq = 0;
+
+    const renderMermaidBlocks = async () => {
+      if (!mermaidCdnUrl) return;
+      if (!mermaidApi) {
+        const mod = (await import(/* @vite-ignore */ mermaidCdnUrl)) as {
+          default: MermaidApi;
+        };
+        mermaidApi = mod.default;
+      }
+
+      const isDark = document.documentElement.classList.contains('dark');
+      mermaidApi.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'strict',
+      });
+
+      for (const block of mermaidBlocks) {
+        const sourceEl = block.querySelector<HTMLElement>('.mermaid-source');
+        const renderEl = block.querySelector<HTMLElement>('.mermaid-render');
+        const definition = sourceEl?.textContent?.trim();
+        if (!renderEl || !definition) continue;
+
+        renderSeq += 1;
+        try {
+          const { svg } = await mermaidApi.render(`mermaid-svg-${renderSeq}`, definition);
+          renderEl.innerHTML = svg;
+        } catch {
+          renderEl.innerHTML =
+            '<p class="font-mono text-xs text-red-500">Mermaid 图表渲染失败，请检查语法。</p>';
+        }
+      }
+    };
+
+    void renderMermaidBlocks();
+    window.addEventListener('blog:theme-change', () => {
+      void renderMermaidBlocks();
+    });
+  }
+</script>

@@ -1,0 +1,69 @@
+---
+import { siteConfig } from '../site.config';
+
+const { giscus } = siteConfig;
+const isConfigured = Boolean(
+  giscus.enabled && giscus.repo && giscus.repoId && giscus.categoryId
+);
+---
+
+{
+  isConfigured && (
+    <section
+      id="comments"
+      class="mt-12 border-t border-zinc-200 pt-8 dark:border-zinc-800"
+      aria-label="评论区"
+      data-giscus-repo={giscus.repo}
+      data-giscus-repo-id={giscus.repoId}
+      data-giscus-category={giscus.category}
+      data-giscus-category-id={giscus.categoryId}
+      data-giscus-mapping={giscus.mapping}
+      data-giscus-reactions={giscus.reactionsEnabled}
+      data-giscus-emit-metadata={giscus.emitMetadata}
+      data-giscus-input-position={giscus.inputPosition}
+      data-giscus-lang={giscus.lang}
+    >
+      <h2 class="mb-4 font-mono text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+        // 评论
+      </h2>
+      <div id="giscus-container"></div>
+    </section>
+  )
+}
+
+<script>
+  const section = document.getElementById('comments');
+  const container = document.getElementById('giscus-container');
+  if (section && container) {
+    const getTheme = () =>
+      document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.setAttribute('data-repo', section.dataset.giscusRepo || '');
+    script.setAttribute('data-repo-id', section.dataset.giscusRepoId || '');
+    script.setAttribute('data-category', section.dataset.giscusCategory || '');
+    script.setAttribute('data-category-id', section.dataset.giscusCategoryId || '');
+    script.setAttribute('data-mapping', section.dataset.giscusMapping || 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', section.dataset.giscusReactions || '1');
+    script.setAttribute('data-emit-metadata', section.dataset.giscusEmitMetadata || '0');
+    script.setAttribute('data-input-position', section.dataset.giscusInputPosition || 'top');
+    script.setAttribute('data-theme', getTheme());
+    script.setAttribute('data-lang', section.dataset.giscusLang || 'zh-CN');
+    container.appendChild(script);
+
+    window.addEventListener('blog:theme-change', (event) => {
+      const detail = (event as CustomEvent<{ theme: string }>).detail;
+      const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: detail.theme } } },
+          'https://giscus.app'
+        );
+      }
+    });
+  }
+</script>

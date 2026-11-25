@@ -1,0 +1,108 @@
+---
+import { siteConfig } from '../site.config';
+import ThemeToggle from './ThemeToggle.astro';
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b border-zinc-200 bg-zinc-50/85 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
+  <div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+    <a
+      href="/"
+      class="font-mono text-sm font-semibold tracking-tight text-zinc-900 transition-colors hover:text-sky-600 dark:text-zinc-100 dark:hover:text-sky-400"
+    >
+      {siteConfig.title}
+    </a>
+
+    <nav class="hidden items-center gap-6 text-sm md:flex" aria-label="主导航">
+      {
+        siteConfig.nav.map((item) => {
+          const isActive =
+            item.href === '/'
+              ? currentPath === '/'
+              : currentPath.startsWith(item.href);
+          return (
+            <a
+              href={item.href}
+              class:list={[
+                'transition-colors',
+                isActive
+                  ? 'font-medium text-sky-600 dark:text-sky-400'
+                  : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100',
+              ]}
+            >
+              {item.label}
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        data-open-search
+        aria-label="搜索文章"
+        class="inline-flex h-8 items-center gap-2 rounded-md border border-zinc-200 bg-white px-2.5 text-xs text-zinc-500 transition-colors hover:border-sky-600 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-sky-400 dark:hover:text-zinc-100"
+      >
+        <svg
+          class="h-3.5 w-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <span class="hidden sm:inline">搜索</span>
+        <kbd class="hidden rounded border border-zinc-200 px-1 font-mono text-[10px] dark:border-zinc-700 sm:inline">
+          ⌘K
+        </kbd>
+      </button>
+
+      <ThemeToggle />
+
+      <button
+        type="button"
+        data-mobile-menu-btn
+        aria-label="展开导航菜单"
+        aria-expanded="false"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 md:hidden"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <nav
+    data-mobile-menu
+    class="hidden border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 md:hidden"
+    aria-label="移动端导航"
+  >
+    <div class="flex flex-col gap-2 text-sm">
+      {
+        siteConfig.nav.map((item) => (
+          <a
+            href={item.href}
+            class="rounded-md px-2 py-1.5 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
+</header>
+
+<script>
+  const menuBtn = document.querySelector('[data-mobile-menu-btn]');
+  const mobileMenu = document.querySelector('[data-mobile-menu]');
+  menuBtn?.addEventListener('click', () => {
+    const isHidden = mobileMenu?.classList.toggle('hidden');
+    menuBtn.setAttribute('aria-expanded', String(!isHidden));
+  });
+</script>
