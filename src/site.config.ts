@@ -44,7 +44,7 @@ export const siteConfig = {
     repo: 'rookie-yuan/blog',
     repoId: 'R_kgDOQwAsog',
     category: 'Announcements',
-    categoryId: '',
+    categoryId: 'DIC_kwDOQwAsos4DL8k-',
     mapping: 'pathname',
     reactionsEnabled: '1',
     emitMetadata: '0',
