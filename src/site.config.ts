@@ -40,9 +40,9 @@ export const siteConfig = {
   mermaidCdnUrl:
     'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
   giscus: {
-    enabled: false,
-    repo: '',
-    repoId: '',
+    enabled: true,
+    repo: 'rookie-yuan/blog',
+    repoId: 'R_kgDOQwAsog',
     category: 'Announcements',
     categoryId: '',
     mapping: 'pathname',
