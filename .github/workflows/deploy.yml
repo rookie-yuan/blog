@@ -32,7 +32,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR || '~/blog' }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
         run: |
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
@@ -43,8 +43,12 @@ jobs:
 
           cat site.tar.gz | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" "
             set -e
-            TARGET_DIR=\"$DEPLOY_DIR\"
-            eval TARGET_DIR=\"\$TARGET_DIR\"
+            TARGET_DIR='$DEPLOY_DIR'
+            case \"\$TARGET_DIR\" in
+              \"\") TARGET_DIR=\"\$HOME/blog\" ;;
+              \"~\") TARGET_DIR=\"\$HOME\" ;;
+              \"~/\"*) TARGET_DIR=\"\$HOME/\${TARGET_DIR#~/}\" ;;
+            esac
             mkdir -p \"\$TARGET_DIR/dist_new\" \"\$TARGET_DIR/dist\"
             rm -rf \"\$TARGET_DIR/dist_new\"/*
             tar -xzf - -C \"\$TARGET_DIR/dist_new\"
@@ -56,9 +60,14 @@ jobs:
 
           cat deploy_cfg.tar.gz | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" "
             set -e
-            TARGET_DIR=\"$DEPLOY_DIR\"
-            eval TARGET_DIR=\"\$TARGET_DIR\"
+            TARGET_DIR='$DEPLOY_DIR'
+            case \"\$TARGET_DIR\" in
+              \"\") TARGET_DIR=\"\$HOME/blog\" ;;
+              \"~\") TARGET_DIR=\"\$HOME\" ;;
+              \"~/\"*) TARGET_DIR=\"\$HOME/\${TARGET_DIR#~/}\" ;;
+            esac
             tar -xzf - -C \"\$TARGET_DIR\"
             cd \"\$TARGET_DIR\"
             docker compose up -d
+            docker exec blog-web caddy reload --config /etc/caddy/Caddyfile || true
           "
