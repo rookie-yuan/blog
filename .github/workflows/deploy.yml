@@ -68,6 +68,5 @@ jobs:
             esac
             tar -xzf - -C \"\$TARGET_DIR\"
             cd \"\$TARGET_DIR\"
-            docker compose up -d
-            docker exec blog-web caddy reload --config /etc/caddy/Caddyfile || true
+            docker compose up -d --force-recreate
           "
